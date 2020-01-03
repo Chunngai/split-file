@@ -12,12 +12,12 @@ def split(size, src_file, dest_dir):
 
     # gets the size of the pieces
     try:
-        size = eval(size)
+        size = eval(str(size))
         if not type(size) == int:
-            print("split_file.py: error: arg of --size should be an int")
-            exit(6)
-    except TypeError:
-        pass
+            raise
+    except:
+        print("split_file.py: error: arg of --size should be an int")
+        exit(1)
 
     # loads the file to be split
     with open(src_file, "rb") as f:
@@ -28,7 +28,8 @@ def split(size, src_file, dest_dir):
     # splits files
     for i in range(math.ceil(file_len / size)):
         # generates the path of a piece of file
-        partial_file_path = os.path.join(dest_dir, os.path.basename(src_file).split('.')[0] + "_{}_{}".format(os.path.splitext(src_file)[-1][1:], i))
+        partial_file_path = os.path.join(dest_dir, os.path.basename(src_file).split('.')[0] + "_{}_{}".format(
+            os.path.splitext(src_file)[-1][1:], i))
 
         # saves the piece
         with open(os.path.join(dest_dir, partial_file_path), "wb") as f:
@@ -45,6 +46,12 @@ def split(size, src_file, dest_dir):
 def combine(combined_file_name, src_path, dest_path):
     print("combining files split from {}".format(combined_file_name))
 
+    # removes ext if the input file name contains
+    try:
+        combined_file_name = combined_file_name.split('.')[-2]
+    except IndexError:
+        pass
+
     # gets all names of files in the src dir
     file_names = os.listdir(src_path)
 
@@ -57,7 +64,7 @@ def combine(combined_file_name, src_path, dest_path):
     # checks if there are some file pieces
     if not file_pieces_paths:
         print("split_file.py: error: no file piece in {}".format(src_path))
-        exit(7)
+        exit(2)
 
     # concatenates the pieces
     new_file_data = b''
@@ -81,53 +88,57 @@ def combine(combined_file_name, src_path, dest_path):
     print("done")
 
 
+def is_existed_file(input_path):
+    if not os.path.exists(input_path):
+        raise argparse.ArgumentTypeError("file not exists")
+    if not os.path.isfile(input_path):
+        raise argparse.ArgumentTypeError("not a file")
+
+    return input_path
+
+
+def is_existed_dir(input_path):
+    if not os.path.exists(input_path):
+        raise argparse.ArgumentTypeError("dir not exists")
+    if not os.path.isdir(input_path):
+        raise argparse.ArgumentTypeError("not a dir")
+
+    return input_path
+
+
 def split_file():
-    # python3 split_file.py [-s | --split]
-    #                       [-f | --file FILE]
-    #                       [-S | --size PIECE_SIZE]
-    #                       [-c | --combine]
-    #                       [-n | --name FILE_NAME]
-    #                       [-h | --help]
-
     parser = argparse.ArgumentParser(description="split_file.py - a tool for splitting huge files into small pieces")
+    subparsers = parser.add_subparsers(title="sub commands", help="valid sub commands")
 
-    parser.add_argument("--split", "-s", action="store_true", help="split a file")
-    parser.add_argument("--size", "-S", action="store", default=1024 ** 2,
-                        help="size of file pieces")
+    # splits files
+    splitting_parser = subparsers.add_parser("split", description="command for splitting huge files",
+                                             help="split a file")
+    splitting_parser.add_argument("--size", "-s", action="store", default=pow(2, 20), metavar="FILE_PIECE_NUM",
+                                  help="size of file pieces")
+    splitting_parser.add_argument("--split-src", action="store", required=True, metavar="SPLIT_SRC",
+                                  type=is_existed_file, help="file to be split")
+    splitting_parser.add_argument("--split-dest", action="store", default=os.getcwd(), metavar="SPLIT_DEST",
+                                  type=is_existed_dir, help="dir for storing file pieces")
+    splitting_parser.set_defaults(func=lambda args: split(args.size, args.split_src, args.split_dest))
 
-    parser.add_argument("--src", action="store", help="path of the file to be processed")
-    parser.add_argument("--dest", action="store", default="",
-                        help="path of the generated file(s) to be saved")
-
-    parser.add_argument("--combine", "-c", action="store_true",
-                        help="combine file pieces into a complete file")
-    parser.add_argument("--name", "-n", action="store",
-                        help="name of the complete file with or without file extension")
+    # combines files
+    combining_parser = subparsers.add_parser("combine",
+                                             description="command for combining file pieces into original file",
+                                             help="combine file pieces into original file")
+    combining_parser.add_argument("--name", "-n", action="store", required=True, metavar="ORIGINAL_FILE_NAME",
+                                  help="name of complete file with or without file extension")
+    combining_parser.add_argument("--combine-src", action="store", required=True, metavar="COMBINE_SRC",
+                                  type=is_existed_dir, help="dir storing needed file pieces")
+    combining_parser.add_argument("--combine-dest", action="store", default=os.getcwd(), metavar="COMBINE_DEST",
+                                  type=is_existed_dir, help="dir for storing generated complete file")
+    combining_parser.set_defaults(func=lambda args: combine(args.name, args.combine_src, args.combine_dest))
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.src):
-        print("split_file.py: error: {} not exists".format(args.src))
-        exit(1)
-    if not os.path.exists(args.dest):
-        print("split_file.py: error: {} not exists".format(args.dest))
-        exit(2)
-
-    if args.split:
-        if not args.src:
-            print("split_file.py: error: path of file to be split needed")
-            exit(3)
-
-        split(args.size, args.src, args.dest)
-    elif args.combine:
-        if not args.name:
-            print("split_file.py: error: name of original file needed")
-            exit(4)
-        if not args.src:
-            print("split_file.py: error: directory of file pieces needed")
-            exit(5)
-
-        combine(args.name, args.src, args.dest)
+    try:
+        args.func(args)
+    except:
+        raise
 
 
 if __name__ == "__main__":
