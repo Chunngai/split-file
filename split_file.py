@@ -106,7 +106,7 @@ def is_existed_dir(input_path):
     return input_path
 
 
-def split_file():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="split_file.py - a tool for splitting huge files into small pieces")
     subparsers = parser.add_subparsers(title="sub commands", help="valid sub commands")
 
@@ -139,7 +139,3 @@ def split_file():
         args.func(args)
     except AttributeError:
         pass
-
-
-if __name__ == "__main__":
-    split_file()
