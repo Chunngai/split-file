@@ -74,6 +74,10 @@ def combine(combined_file_name, src_path, dest_path):
     with open(new_file_path, "wb") as f:
         f.write(new_file_data)
 
+    # deletes file pieces
+    for i in range(len(file_pieces_paths)):
+        os.remove(file_pieces_paths[i])
+
     print("done")
 
 
