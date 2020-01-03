@@ -137,8 +137,8 @@ def split_file():
 
     try:
         args.func(args)
-    except:
-        raise
+    except AttributeError:
+        pass
 
 
 if __name__ == "__main__":
