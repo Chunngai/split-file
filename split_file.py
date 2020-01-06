@@ -16,7 +16,7 @@ def split(size, src_file, dest_dir):
         if not type(size) == int:
             raise
     except:
-        print("split_file.py: error: arg of --size should be an int")
+        print("{}arg of --size should be an int".format(err_msg))
         exit(1)
 
     # loads the file to be split
@@ -63,7 +63,7 @@ def combine(combined_file_name, src_path, dest_path):
 
     # checks if there are some file pieces
     if not file_pieces_paths:
-        print("split_file.py: error: no file piece in {}".format(src_path))
+        print("{}no file piece in {}".format(err_msg, src_path))
         exit(2)
 
     # concatenates the pieces
@@ -107,6 +107,8 @@ def is_existed_dir(input_path):
 
 
 if __name__ == "__main__":
+    err_msg = "split_file.py: error: "
+
     parser = argparse.ArgumentParser(description="split_file.py - a tool for splitting huge files into small pieces")
     subparsers = parser.add_subparsers(title="sub commands", help="valid sub commands")
 
