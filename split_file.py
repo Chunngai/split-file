@@ -28,8 +28,7 @@ def split(size, src_file, dest_dir):
     # splits files
     for i in range(math.ceil(file_len / size)):
         # generates the path of a piece of file
-        partial_file_path = os.path.join(dest_dir, os.path.basename(src_file).split('.')[0] + "_{}_{}".format(
-            os.path.splitext(src_file)[-1][1:], i))
+        partial_file_path = os.path.join(dest_dir, os.path.basename(src_file) + "_{}".format(i))
 
         # saves the piece
         with open(os.path.join(dest_dir, partial_file_path), "wb") as f:
@@ -46,18 +45,12 @@ def split(size, src_file, dest_dir):
 def combine(combined_file_name, src_path, dest_path):
     print("combining files split from {}".format(combined_file_name))
 
-    # removes ext if the input file name contains
-    try:
-        combined_file_name = combined_file_name.split('.')[-2]
-    except IndexError:
-        pass
-
     # gets all names of files in the src dir
     file_names = os.listdir(src_path)
 
     # gets all pieces of the original file
     file_pieces_paths = [os.path.join(src_path, file_name) for file_name in file_names
-                         if re.compile(r"{}_.*?_\d+".format(combined_file_name)).search(file_name)]
+                         if re.compile(r"{}_\d+".format(combined_file_name)).search(file_name)]
     # sorts the pieces according to the indices
     file_pieces_paths.sort(key=lambda x: int(x.split('_')[-1]))
 
@@ -72,11 +65,8 @@ def combine(combined_file_name, src_path, dest_path):
         with open(file_pieces_paths[i], "rb") as f:
             new_file_data += f.read()
 
-    # retrieves the extension from the first piece
-    combined_file_ext = file_pieces_paths[0].split("_")[-2]
-
     # generates the path of the combined file
-    new_file_path = os.path.join(dest_path, "{}.{}".format(combined_file_name, combined_file_ext))
+    new_file_path = os.path.join(dest_path, "{}".format(combined_file_name))
     # saves the file
     with open(new_file_path, "wb") as f:
         f.write(new_file_data)
@@ -115,7 +105,7 @@ if __name__ == "__main__":
     # splits files
     splitting_parser = subparsers.add_parser("split", description="command for splitting huge files",
                                              help="split a file")
-    splitting_parser.add_argument("--size", "-s", action="store", default=pow(2, 20), metavar="FILE_PIECE_NUM",
+    splitting_parser.add_argument("--size", "-s", action="store", default=pow(2, 20), metavar="FILE_PIECE_SIZE",
                                   help="size of file pieces")
     splitting_parser.add_argument("--split-src", action="store", required=True, metavar="SPLIT_SRC",
                                   type=is_existed_file, help="file to be split")
