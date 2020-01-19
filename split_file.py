@@ -20,24 +20,24 @@ def split(size, src_file, dest_dir):
         exit(1)
 
     # loads the file to be split
-    with open(src_file, "rb") as f:
-        file_bin_content = f.read()
+    with open(src_file, "rb") as f_read:
+        count = 0
+        while True:
+            file_partial_bin_content = f_read.read(size)
 
-    file_len = len(file_bin_content)  # length of the binary content
+            if not file_partial_bin_content:
+                break
 
-    # splits files
-    for i in range(math.ceil(file_len / size)):
-        # generates the path of a piece of file
-        partial_file_path = os.path.join(dest_dir, os.path.basename(src_file) + "_{}".format(i))
+            # generates the path of the file piece
+            partial_file_path = os.path.join(dest_dir, os.path.basename(src_file) + "_{}".format(count))
 
-        # saves the piece
-        with open(os.path.join(dest_dir, partial_file_path), "wb") as f:
-            f.write(file_bin_content[:size])
+            # saves the piece
+            with open(os.path.join(dest_dir, partial_file_path), "wb") as f_write:
+                f_write.write(file_partial_bin_content)
 
-            print("{} saved".format(partial_file_path))
+                print("{} saved".format(partial_file_path))
 
-        # gets the content of the next piece
-        file_bin_content = file_bin_content[size:]
+            count += 1
 
     print("done")
 
