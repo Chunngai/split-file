@@ -42,15 +42,34 @@ def split(size, src_file, dest_dir):
     print("done")
 
 
+def _process_combined_file_name(combined_file_name):
+    meta_chr_str = ".^$*+?{}[]\\|()"
+
+    i = 0
+    name_len = len(combined_file_name)
+    while i < name_len:
+        if combined_file_name[i] in meta_chr_str:
+            combined_file_name = f"{combined_file_name[:i]}\\{combined_file_name[i:]}"
+            i += 1
+            name_len += 1
+
+        i += 1
+
+    return combined_file_name
+
+
 def combine(combined_file_name, src_path, dest_path):
     print("combining files split from {}".format(combined_file_name))
+
+    # inserts a '\' before meta characters of re
+    combined_file_name_processed = _process_combined_file_name(combined_file_name)
 
     # gets all names of files in the src dir
     file_names = os.listdir(src_path)
 
     # gets all pieces of the original file
     file_pieces_paths = [os.path.join(src_path, file_name) for file_name in file_names
-                         if re.compile(r"{}_\d+".format(combined_file_name)).search(file_name)]
+                         if re.compile(r"{}_\d+".format(combined_file_name_processed)).search(file_name)]
     # sorts the pieces according to the indices
     file_pieces_paths.sort(key=lambda x: int(x.split('_')[-1]))
 
