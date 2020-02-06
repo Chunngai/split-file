@@ -78,17 +78,14 @@ def combine(combined_file_name, src_path, dest_path):
         print("{}no file piece in {}".format(err_msg, src_path))
         exit(2)
 
-    # concatenates the pieces
-    new_file_data = b''
-    for i in range(len(file_pieces_paths)):
-        with open(file_pieces_paths[i], "rb") as f:
-            new_file_data += f.read()
-
     # generates the path of the combined file
     new_file_path = os.path.join(dest_path, "{}".format(combined_file_name))
-    # saves the file
-    with open(new_file_path, "wb") as f:
-        f.write(new_file_data)
+
+    # concatenates the file
+    with open(new_file_path, "ab") as f_append:
+        for i in range(len(file_pieces_paths)):
+            with open(file_pieces_paths[i], "rb") as f_read:
+                f_append.write(f_read.read())
 
     # deletes file pieces
     for i in range(len(file_pieces_paths)):
