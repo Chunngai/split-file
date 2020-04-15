@@ -125,7 +125,7 @@ if __name__ == "__main__":
                                   help="size of file pieces")
     splitting_parser.add_argument("--split-src", action="store", required=True, metavar="SPLIT_SRC",
                                   type=is_existed_file, help="file to be split")
-    splitting_parser.add_argument("--split-dest", action="store", default=os.getcwd(), metavar="SPLIT_DEST",
+    splitting_parser.add_argument("--split-dest", action="store", metavar="SPLIT_DEST",
                                   type=is_existed_dir, help="dir for storing file pieces")
     splitting_parser.set_defaults(func=lambda args: split(args.size, args.split_src, args.split_dest))
 
@@ -134,16 +134,22 @@ if __name__ == "__main__":
                                              description="command for combining file pieces into original file",
                                              help="combine file pieces into original file")
     combining_parser.add_argument("--name", "-n", action="store", required=True, metavar="ORIGINAL_FILE_NAME",
-                                  help="name of complete file with or without file extension")
+                                  help="name of the original file with file extension")
     combining_parser.add_argument("--combine-src", action="store", required=True, metavar="COMBINE_SRC",
                                   type=is_existed_dir, help="dir storing needed file pieces")
-    combining_parser.add_argument("--combine-dest", action="store", default=os.getcwd(), metavar="COMBINE_DEST",
+    combining_parser.add_argument("--combine-dest", action="store", metavar="COMBINE_DEST",
                                   type=is_existed_dir, help="dir for storing generated complete file")
     combining_parser.set_defaults(func=lambda args: combine(args.name, args.combine_src, args.combine_dest))
 
     args = parser.parse_args()
 
     try:
+        if "split_src" in list(vars(args).keys()) and args.split_dest is None:
+            args.split_dest = os.path.split(args.split_src)[0]
+
+        if "combine_src" in list(vars(args).keys()) and args.combine_dest is None:
+            args.combine_dest = args.combine_src
+
         args.func(args)
     except AttributeError:
         pass
